@@ -1,6 +1,5 @@
 package com.example.calendarium
 
-import com.google.firebase.firestore.QuerySnapshot
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Bundle
@@ -13,20 +12,13 @@ import com.google.firebase.auth.FirebaseAuth
 import android.icu.util.Calendar
 import android.text.Editable
 import androidx.recyclerview.widget.LinearLayoutManager
-
-
-
+import com.google.firebase.database.FirebaseDatabase
 import android.util.Log
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
-import androidx.recyclerview.widget.RecyclerView
 import com.google.firebase.firestore.FirebaseFirestore
 
-
+import java.util.HashMap
 
 import com.example.calendarium.databinding.ActivityPopUpBinding
-
 
 class CalActivity : AppCompatActivity() {
 
@@ -35,11 +27,11 @@ class CalActivity : AppCompatActivity() {
     private lateinit var binding: ActivityCalBinding
     private lateinit var bindingPop: ActivityPopUpBinding
 
-    private val TAG = "CalActivity" 
+    private val TAG = "CalActivity" // Deklaracja zmiennej TAG
     private val db = FirebaseFirestore.getInstance()
     private var firebaseAuth = FirebaseAuth.getInstance()
-
     lateinit var Date1: String
+
 
     data class Event(
         val title: String,
@@ -51,6 +43,7 @@ class CalActivity : AppCompatActivity() {
 
     private fun viewNote() {
         //TODO: POBIERANIE Z BAZY DO LISTVIEW \"@+id/notesListView\"
+        //TODO: GUZIK DODAJ MA DZIAŁAĆ ID "@+id/addNoteButton", , GODZINA TEŻ
         //TODO:
         //ZROBIĆ LAYOUT EDITTEXT-> pop_up
     }
@@ -81,43 +74,7 @@ class CalActivity : AppCompatActivity() {
         return time
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-
-        binding = ActivityCalBinding.inflate(layoutInflater)
-        setContentView(binding.root)
-
-        Calendar.getInstance().time
-
-        val data = ArrayList<ItemViewModel>()
-        val recyclerview = binding.recyclerView //findViewById<RecyclerView>(R.id.recyclerview)
-
-        calendarView = findViewById(R.id.calendarView)
-        dateTV = findViewById(R.id.selectedDateTextView)
-        calendarView.setOnDateChangeListener(
-            OnDateChangeListener { view, year, month, dayOfMonth ->
-                 Date1 = (dayOfMonth.toString() + "-"
-                        + (month + 1) + "-" + year)
-                dateTV.text = Date1
-
-
-            })
-        //viewNote(Date) - i wtedy z bazy danych pobiera notatki dla danej daty
-
-     fun createEvent(title: String, date: String, description: String, noteText: String, noteTime: String) {
+    private fun createEvent(title: String, date: String, description: String, noteText: String, noteTime: String) {
         val userId = firebaseAuth.currentUser?.uid
 
         if (userId != null) {
@@ -134,13 +91,14 @@ override fun onCreate(savedInstanceState: Bundle?) {
                     "noteTime" to noteTime.toString()
                 )
 
-
+                // Dodaj nowe wydarzenie do kolekcji "events" użytkownika
                 db.collection("users")
                     .document(userId)
                     .collection("events")
                     .add(event)
-                    .addOnSuccessListener { date ->
-                        Log.d(TAG, "DocumentSnapshot added with ID: ${date}")
+                    .addOnSuccessListener { documentReference ->
+                        // Operacja zakończona sukcesem
+                        Log.d(TAG, "DocumentSnapshot added with ID: ${documentReference.id}")
                     }
                     .addOnFailureListener { e ->
                         // Błąd podczas dodawania dokumentu
@@ -150,8 +108,29 @@ override fun onCreate(savedInstanceState: Bundle?) {
         }
     }
 
-//        val formattedDate = formatDate(currentDate.year, currentDate.month, currentDate.day)
-//        onDateSelected(formattedDate)
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        binding = ActivityCalBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+        Calendar.getInstance().time
+
+        val data = ArrayList<ItemViewModel>()
+        val recyclerview = binding.recyclerView //findViewById<RecyclerView>(R.id.recyclerview)
+
+
+
+
+        calendarView = findViewById(R.id.calendarView)
+        dateTV = findViewById(R.id.selectedDateTextView)
+        calendarView.setOnDateChangeListener(
+            OnDateChangeListener { view, year, month, dayOfMonth ->
+                Date1 = (dayOfMonth.toString() + "-"
+                        + (month + 1) + "-" + year)
+                dateTV.setText(Date1)
+            })
+        //viewNote(Date) - i wtedy z bazy danych pobiera notatki dla danej daty
 
         binding.addNoteButton.setOnClickListener {
             addNoteView()
@@ -166,16 +145,22 @@ override fun onCreate(savedInstanceState: Bundle?) {
                     setContentView(binding.root)
 
                     val title = "Tytuł wydarzenia"
-                    val description = "Opis wydarzenia"
                     val date = Date1
+                    val description = "Opis wydarzenia"
 
                     createEvent(title, date, description, note.toString(), noteTime.toString())
+
+
                 }
             }
             bindingPop.addNoteBack.setOnClickListener {
                 setContentView(binding.root)
             }
         }
+
+//        val formattedDate = formatDate(currentDate.year, currentDate.month, currentDate.day)
+//        onDateSelected(formattedDate)
+
 
         firebaseAuth = FirebaseAuth.getInstance()
         binding.btnLogout.setOnClickListener{
