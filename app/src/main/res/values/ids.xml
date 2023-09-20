@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <item name="btn_back" type="id" />
+    <item name="et_first_name" type="id" />
+    <item name="et_last_name" type="id" />
+    <item name="et_user_mail" type="id" />
+    <item name="et_password_first" type="id" />
+</resources>

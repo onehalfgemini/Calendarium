@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "511100045763",
+    "project_id": "calendarium-leviosa",
+    "storage_bucket": "calendarium-leviosa.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:511100045763:android:8750ca0e9a6e37b31fd576",
+        "android_client_info": {
+          "package_name": "com.example.calendarium"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "511100045763-43bi4sfhoip82j2c8d9e60aclc19mfco.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCFD_-2sUchNgx65hXC-nYp6TNeVQJxFLU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "511100045763-43bi4sfhoip82j2c8d9e60aclc19mfco.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
