@@ -20,6 +20,8 @@ import java.util.HashMap
 
 import com.example.calendarium.databinding.ActivityPopUpBinding
 
+
+
 class CalActivity : AppCompatActivity() {
 
     private lateinit var calendarView: CalendarView //*
@@ -28,6 +30,7 @@ class CalActivity : AppCompatActivity() {
     private lateinit var bindingPop: ActivityPopUpBinding
 
     private val TAG = "CalActivity" // Deklaracja zmiennej TAG
+    private val DOW ="FetchActivity"
     private val db = FirebaseFirestore.getInstance()
     private var firebaseAuth = FirebaseAuth.getInstance()
     lateinit var Date1: String
@@ -74,7 +77,8 @@ class CalActivity : AppCompatActivity() {
         return time
     }
 
-    private fun createEvent(title: String, date: String, description: String, noteText: String, noteTime: String) {
+
+    private fun createEvent( date: String,  noteText: String, noteTime: String) {
         val userId = firebaseAuth.currentUser?.uid
 
         if (userId != null) {
@@ -84,21 +88,22 @@ class CalActivity : AppCompatActivity() {
 
             if (noteText != null && noteTime != null) {
                 val event = hashMapOf(
-                    "title" to title,
                     "date" to date,
-                    "description" to description,
                     "noteText" to noteText.toString(),
                     "noteTime" to noteTime.toString()
                 )
 
+                val timeTemp= addNoteTime()
+                val timeTempSec = listOf(Date1, timeTemp.toString())
+                var docID = timeTempSec.joinToString(",")
+
                 // Dodaj nowe wydarzenie do kolekcji "events" użytkownika
                 db.collection("users")
                     .document(userId)
-                    .collection("events")
-                    .add(event)
+                    .collection("events").document(docID).set(event)
                     .addOnSuccessListener { documentReference ->
                         // Operacja zakończona sukcesem
-                        Log.d(TAG, "DocumentSnapshot added with ID: ${documentReference.id}")
+                        Log.d(TAG, "DocumentSnapshot added with ID: ${docID}")
                     }
                     .addOnFailureListener { e ->
                         // Błąd podczas dodawania dokumentu
@@ -108,6 +113,25 @@ class CalActivity : AppCompatActivity() {
         }
     }
 
+private fun fetchEvent()
+{
+    val userId = firebaseAuth.currentUser?.uid
+
+    if (userId != null) {
+        db.collection("users")
+            .document(userId)
+            .collection("events")
+            .get()
+            .addOnSuccessListener { documents ->
+                for (document in documents) {
+                    Log.d(DOW, "${document.id} => ${document.data}")
+                }
+            }
+            .addOnFailureListener { exception ->
+                Log.w(DOW, "Error getting documents: ", exception)
+            }
+    }
+}
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -119,9 +143,6 @@ class CalActivity : AppCompatActivity() {
         val data = ArrayList<ItemViewModel>()
         val recyclerview = binding.recyclerView //findViewById<RecyclerView>(R.id.recyclerview)
 
-
-
-
         calendarView = findViewById(R.id.calendarView)
         dateTV = findViewById(R.id.selectedDateTextView)
         calendarView.setOnDateChangeListener(
@@ -131,6 +152,9 @@ class CalActivity : AppCompatActivity() {
                 dateTV.setText(Date1)
             })
         //viewNote(Date) - i wtedy z bazy danych pobiera notatki dla danej daty
+
+        fetchEvent()
+
 
         binding.addNoteButton.setOnClickListener {
             addNoteView()
@@ -144,11 +168,10 @@ class CalActivity : AppCompatActivity() {
                     recyclerview.adapter = adapter
                     setContentView(binding.root)
 
-                    val title = "Tytuł wydarzenia"
                     val date = Date1
-                    val description = "Opis wydarzenia"
 
-                    createEvent(title, date, description, note.toString(), noteTime.toString())
+
+                    createEvent( date,  note.toString(), noteTime.toString())
 
 
                 }
