@@ -46,8 +46,6 @@ class CalActivity : AppCompatActivity() {
 
     private fun viewNote() {
         //TODO: POBIERANIE Z BAZY DO LISTVIEW \"@+id/notesListView\"
-        //TODO: GUZIK DODAJ MA DZIAŁAĆ ID "@+id/addNoteButton", , GODZINA TEŻ
-        //TODO:
         //ZROBIĆ LAYOUT EDITTEXT-> pop_up
     }
 
@@ -121,6 +119,7 @@ private fun fetchEvent()
         db.collection("users")
             .document(userId)
             .collection("events")
+            .whereEqualTo("date", Date1)
             .get()
             .addOnSuccessListener { documents ->
                 for (document in documents) {
@@ -150,10 +149,11 @@ private fun fetchEvent()
                 Date1 = (dayOfMonth.toString() + "-"
                         + (month + 1) + "-" + year)
                 dateTV.setText(Date1)
+                fetchEvent()
             })
         //viewNote(Date) - i wtedy z bazy danych pobiera notatki dla danej daty
 
-        fetchEvent()
+
 
 
         binding.addNoteButton.setOnClickListener {
@@ -161,6 +161,7 @@ private fun fetchEvent()
             val note = addNoteText()
             val noteTime = addNoteTime()
             bindingPop.addNoteSubmit.setOnClickListener {
+
                 if (note != null) {
                     recyclerview.layoutManager = LinearLayoutManager(this)
                     data.add(ItemViewModel(R.drawable.ic_baseline_folder_24, note))
