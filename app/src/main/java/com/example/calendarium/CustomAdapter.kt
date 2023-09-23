@@ -1,13 +1,25 @@
 package com.example.calendarium
 
+
+
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
+import android.widget.ExpandableListView.OnChildClickListener
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.appcompat.view.menu.MenuView.ItemView
 import androidx.recyclerview.widget.RecyclerView
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 
-class CustomAdapter(private val mList: List<ItemViewModel>) : RecyclerView.Adapter<CustomAdapter.ViewHolder>() {
+class CustomAdapter(private val mList: MutableList<ItemViewModel>,
+
+                    private val deleteEvent:(String)->Unit) : RecyclerView.Adapter<CustomAdapter.ViewHolder>() {
+
+
 
     // create new views
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -16,19 +28,32 @@ class CustomAdapter(private val mList: List<ItemViewModel>) : RecyclerView.Adapt
         val view = LayoutInflater.from(parent.context)
             .inflate(R.layout.card_view_design, parent, false)
 
+
         return ViewHolder(view)
     }
+
 
     // binds the list items to a view
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
 
         val ItemsViewModel = mList[position]
 
+
+
+        holder.deleteButton.setOnClickListener{
+            mList.removeAt(position)
+            val documentId = mList[position].documentId
+            deleteEvent(documentId)
+            notifyDataSetChanged()
+
+
+        }
+
         // sets the image to the imageview from our itemHolder class
-        holder.imageView.setImageResource(ItemsViewModel.image)
+        holder.timeView.text=(ItemsViewModel.time)
 
         // sets the text to the textview from our itemHolder class
-        holder.textView.text = ItemsViewModel.text
+        holder.textView.text = ItemsViewModel.text.toString()
 
     }
 
@@ -39,7 +64,8 @@ class CustomAdapter(private val mList: List<ItemViewModel>) : RecyclerView.Adapt
 
     // Holds the views for adding it to image and text
     class ViewHolder(ItemView: View) : RecyclerView.ViewHolder(ItemView) {
-        val imageView: ImageView = itemView.findViewById(R.id.imageview)
+        val timeView: TextView = itemView.findViewById(R.id.timeTextView)
         val textView: TextView = itemView.findViewById(R.id.textView)
+        val deleteButton: Button = itemView.findViewById(R.id.deleteButton)
     }
 }

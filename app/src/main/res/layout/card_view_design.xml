@@ -3,23 +3,20 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="50dp"
+    android:layout_height="wrap_content"
     android:layout_margin="10dp"
-    app:cardElevation="6dp">
+    app:cardElevation="6dp"
+    >
 
-    <LinearLayout
+    <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:padding="5dp">
-
-        <ImageView
-            android:id="@+id/imageview"
-            android:layout_width="40dp"
-            android:layout_height="40dp" />
+        android:padding="5dp"
+        android:background="#441f">
 
         <TextView
-            android:id="@+id/textView"
+            android:id="@+id/timeTextView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="10dp"
@@ -28,6 +25,34 @@
             android:textSize="20sp"
             android:textStyle="bold" />
 
-    </LinearLayout>
+        <TextView
+            android:id="@+id/textView"
+            android:layout_toEndOf="@id/timeTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:layout_marginLeft="15dp"
+            android:layout_toStartOf="@id/deleteButton"
+            android:text="Item"
+            android:textSize="20sp"
+            android:textStyle="normal" />
+
+        <Button
+            android:id="@+id/deleteButton"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentTop="true"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+
+            android:layout_marginTop="5dp"
+            android:layout_marginEnd="5dp"
+            android:layout_marginRight="5dp"
+            android:background="@drawable/ic_baseline_delete_24"
+            android:orientation="horizontal"
+            app:layout_constraintDimensionRatio="1:1"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintWidth_percent=".08" />
+    </RelativeLayout>
 
 </androidx.cardview.widget.CardView>

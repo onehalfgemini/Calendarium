@@ -10,17 +10,18 @@ import android.widget.TextView
 import android.widget.CalendarView.OnDateChangeListener
 import com.google.firebase.auth.FirebaseAuth
 import android.icu.util.Calendar
+import android.os.Build
 import android.text.Editable
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.google.firebase.database.FirebaseDatabase
 import android.util.Log
+import android.widget.Button
+import androidx.annotation.RequiresApi
+import androidx.recyclerview.widget.RecyclerView
 import com.google.firebase.firestore.FirebaseFirestore
-
-import java.util.HashMap
-
 import com.example.calendarium.databinding.ActivityPopUpBinding
-
-
+import com.example.calendarium.databinding.CardViewDesignBinding
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 class CalActivity : AppCompatActivity() {
 
@@ -28,26 +29,27 @@ class CalActivity : AppCompatActivity() {
     private lateinit var dateTV: TextView
     private lateinit var binding: ActivityCalBinding
     private lateinit var bindingPop: ActivityPopUpBinding
+    private lateinit var delButton: Button
+    private lateinit var bindingCard: CardViewDesignBinding
+    private lateinit var viewHolder: RecyclerView.ViewHolder
 
-    private val TAG = "CalActivity" // Deklaracja zmiennej TAG
+
+
+    private val TAG = "EventActivity"
     private val DOW ="FetchActivity"
+    private val DEL ="DeleteActivity"
     private val db = FirebaseFirestore.getInstance()
     private var firebaseAuth = FirebaseAuth.getInstance()
     lateinit var Date1: String
+    lateinit var dzien : String
+    lateinit var miesiac:String
+
+    var templist: List<ItemViewModel> = emptyList()
+    var data: MutableList<ItemViewModel> = templist.toMutableList()
+
+    private var recyclerview = binding.recyclerView
 
 
-    data class Event(
-        val title: String,
-        val date: String,
-        val description: String,
-        var noteText: String? = null,
-        var noteTime: String? = null
-    )
-
-    private fun viewNote() {
-        //TODO: POBIERANIE Z BAZY DO LISTVIEW \"@+id/notesListView\"
-        //ZROBIĆ LAYOUT EDITTEXT-> pop_up
-    }
 
 
     private fun addNoteView(){
@@ -75,7 +77,6 @@ class CalActivity : AppCompatActivity() {
         return time
     }
 
-
     private fun createEvent( date: String,  noteText: String, noteTime: String) {
         val userId = firebaseAuth.currentUser?.uid
 
@@ -92,8 +93,10 @@ class CalActivity : AppCompatActivity() {
                 )
 
                 val timeTemp= addNoteTime()
-                val timeTempSec = listOf(Date1, timeTemp.toString())
+                val timeTempSec = listOf(date, timeTemp.toString())
                 var docID = timeTempSec.joinToString(",")
+
+
 
                 // Dodaj nowe wydarzenie do kolekcji "events" użytkownika
                 db.collection("users")
@@ -111,27 +114,83 @@ class CalActivity : AppCompatActivity() {
         }
     }
 
-private fun fetchEvent()
+private fun fetchEvent(date:String)
 {
     val userId = firebaseAuth.currentUser?.uid
+
+    //findViewById<RecyclerView>(R.id.recyclerview)
+    recyclerview.layoutManager = LinearLayoutManager(this)
 
     if (userId != null) {
         db.collection("users")
             .document(userId)
             .collection("events")
-            .whereEqualTo("date", Date1)
+            .whereEqualTo("date", date)
             .get()
             .addOnSuccessListener { documents ->
                 for (document in documents) {
                     Log.d(DOW, "${document.id} => ${document.data}")
+                    var note =document.data.toString()
+                    var note1 = note.substring(1,note.length-1).split(",")
+
+                    val regex = Regex("noteText=([^,]+)")
+                    val matchResult = regex.find(note)
+                    var temporal = matchResult?.groups?.get(1)?.value.toString()
+
+                    if (temporal.endsWith("}")) {
+                        // Remove the last character using substring
+                        temporal = temporal.substring(0, temporal.length - 1)
+                    }
+
+//note1[2].split("=")[1])
+
+                    data.add(ItemViewModel( document.id.split(",")[1],temporal, document.id))
+                    Log.w("test1", note1[1].split("=")[1])
                 }
+
+
+                val adapter = CustomAdapter(data, this:: deleteEvent)
+                recyclerview.adapter = adapter
             }
             .addOnFailureListener { exception ->
                 Log.w(DOW, "Error getting documents: ", exception)
             }
+
+
+        setContentView(binding.root)
     }
 }
 
+    private fun deleteEvent(documentId: String) {
+        val userId = firebaseAuth.currentUser?.uid
+
+        if (userId != null) {
+            db.collection("users")
+                .document(userId)
+                .collection("events")
+                .document(documentId)
+                .delete()
+                .addOnSuccessListener {
+                    // Document successfully deleted
+                    Log.d(TAG, "DocumentSnapshot successfully deleted: $documentId")
+
+                    // Optionally, remove the item from your data list and notify the adapter
+                    val position = data.indexOfFirst { it.documentId == documentId }
+                    if (position != -1) {
+                        data.removeAt(position)
+                        recyclerview.adapter?.notifyItemRemoved(position)
+                    }
+                }
+                .addOnFailureListener { exception ->
+                    Log.w(TAG, "Error deleting document $documentId", exception)
+                }
+        }
+    }
+
+
+
+    @SuppressLint("SuspiciousIndentation")
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -139,22 +198,32 @@ private fun fetchEvent()
         setContentView(binding.root)
         Calendar.getInstance().time
 
-        val data = ArrayList<ItemViewModel>()
-        val recyclerview = binding.recyclerView //findViewById<RecyclerView>(R.id.recyclerview)
+        val formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy")
+        Date1 = LocalDateTime.now().format(formatter)
+
+//        val data = ArrayList<ItemViewModel>()
+//        val recyclerview = binding.recyclerView //findViewById<RecyclerView>(R.id.recyclerview)
 
         calendarView = findViewById(R.id.calendarView)
         dateTV = findViewById(R.id.selectedDateTextView)
+        dateTV.setText(Date1)
+        fetchEvent(Date1)
         calendarView.setOnDateChangeListener(
+
             OnDateChangeListener { view, year, month, dayOfMonth ->
-                Date1 = (dayOfMonth.toString() + "-"
-                        + (month + 1) + "-" + year)
-                dateTV.setText(Date1)
-                fetchEvent()
+                dzien= dayOfMonth.toString()
+                miesiac= (month+1).toString()
+
+                if(dayOfMonth<=9) dzien = ("0$dayOfMonth")
+                if(month <=8) miesiac = ("0" + (month+1))
+
+                    Date1 = (dzien + "-"
+                            + miesiac + "-" + year)
+                dateTV.text = Date1
+                Log.i("test", Date1)
+                fetchEvent(Date1)
             })
         //viewNote(Date) - i wtedy z bazy danych pobiera notatki dla danej daty
-
-
-
 
         binding.addNoteButton.setOnClickListener {
             addNoteView()
@@ -163,18 +232,9 @@ private fun fetchEvent()
             bindingPop.addNoteSubmit.setOnClickListener {
 
                 if (note != null) {
-                    recyclerview.layoutManager = LinearLayoutManager(this)
-                    data.add(ItemViewModel(R.drawable.ic_baseline_folder_24, note))
-                    val adapter = CustomAdapter(data)
-                    recyclerview.adapter = adapter
+                    createEvent(Date1,  note.toString(), noteTime.toString())
                     setContentView(binding.root)
-
-                    val date = Date1
-
-
-                    createEvent( date,  note.toString(), noteTime.toString())
-
-
+                    fetchEvent(Date1)
                 }
             }
             bindingPop.addNoteBack.setOnClickListener {
@@ -182,9 +242,20 @@ private fun fetchEvent()
             }
         }
 
+//        bindingCard.deleteButton.setOnClickListener{
+//
+//
+//
+//         data.removeAt(viewHolder.adapterPosition)
+//
+//        }
+
+//
+//        button.setOnClickListener{deleteItem(index)}
+
+
 //        val formattedDate = formatDate(currentDate.year, currentDate.month, currentDate.day)
 //        onDateSelected(formattedDate)
-
 
         firebaseAuth = FirebaseAuth.getInstance()
         binding.btnLogout.setOnClickListener{
@@ -195,6 +266,7 @@ private fun fetchEvent()
             finish()
         }
     }
-
 }
+
+
 
