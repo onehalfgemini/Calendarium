@@ -2,6 +2,7 @@ package com.example.calendarium
 
 
 
+import android.annotation.SuppressLint
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -16,8 +17,8 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 
 class CustomAdapter(private val mList: MutableList<ItemViewModel>,
-
                     private val deleteEvent:(String)->Unit) : RecyclerView.Adapter<CustomAdapter.ViewHolder>() {
+
 
 
 
@@ -28,30 +29,27 @@ class CustomAdapter(private val mList: MutableList<ItemViewModel>,
         val view = LayoutInflater.from(parent.context)
             .inflate(R.layout.card_view_design, parent, false)
 
-
         return ViewHolder(view)
     }
 
 
     // binds the list items to a view
+    @SuppressLint("NotifyDataSetChanged")
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
 
         val ItemsViewModel = mList[position]
 
 
-
         holder.deleteButton.setOnClickListener{
             mList.removeAt(position)
             val documentId = mList[position].documentId
+            Log.w("Test: ", documentId)
             deleteEvent(documentId)
             notifyDataSetChanged()
-
-
         }
 
         // sets the image to the imageview from our itemHolder class
         holder.timeView.text=(ItemsViewModel.time)
-
         // sets the text to the textview from our itemHolder class
         holder.textView.text = ItemsViewModel.text.toString()
 

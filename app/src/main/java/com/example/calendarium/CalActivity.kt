@@ -29,11 +29,6 @@ class CalActivity : AppCompatActivity() {
     private lateinit var dateTV: TextView
     private lateinit var binding: ActivityCalBinding
     private lateinit var bindingPop: ActivityPopUpBinding
-    private lateinit var delButton: Button
-    private lateinit var bindingCard: CardViewDesignBinding
-    private lateinit var viewHolder: RecyclerView.ViewHolder
-
-
 
     private val TAG = "EventActivity"
     private val DOW ="FetchActivity"
@@ -46,8 +41,6 @@ class CalActivity : AppCompatActivity() {
 
     var templist: List<ItemViewModel> = emptyList()
     var data: MutableList<ItemViewModel> = templist.toMutableList()
-
-    private var recyclerview = binding.recyclerView
 
 
 
@@ -65,19 +58,15 @@ class CalActivity : AppCompatActivity() {
         val timePickerNote = bindingPop.addNoteTimePicker
         var time: Editable? = null
 
-
         time = Editable.Factory.getInstance().newEditable("${timePickerNote.hour}:${timePickerNote.minute}")
-
         timePickerNote.setOnTimeChangedListener { _, hour, minute ->
-
             time?.clear()
             time?.append("$hour:$minute")
         }
-
         return time
     }
 
-    private fun createEvent( date: String,  noteText: String, noteTime: String) {
+    private fun createEvent( date: String) {
         val userId = firebaseAuth.currentUser?.uid
 
         if (userId != null) {
@@ -95,7 +84,6 @@ class CalActivity : AppCompatActivity() {
                 val timeTemp= addNoteTime()
                 val timeTempSec = listOf(date, timeTemp.toString())
                 var docID = timeTempSec.joinToString(",")
-
 
 
                 // Dodaj nowe wydarzenie do kolekcji "events" użytkownika
@@ -117,7 +105,7 @@ class CalActivity : AppCompatActivity() {
 private fun fetchEvent(date:String)
 {
     val userId = firebaseAuth.currentUser?.uid
-
+    var recyclerview = binding.recyclerView
     //findViewById<RecyclerView>(R.id.recyclerview)
     recyclerview.layoutManager = LinearLayoutManager(this)
 
@@ -142,22 +130,17 @@ private fun fetchEvent(date:String)
                         temporal = temporal.substring(0, temporal.length - 1)
                     }
 
-//note1[2].split("=")[1])
-
-                    data.add(ItemViewModel( document.id.split(",")[1],temporal, document.id))
+                    data.add(ItemViewModel( document.id.split(",")[1],temporal,document.id ))
                     Log.w("test1", note1[1].split("=")[1])
                 }
 
-
-                val adapter = CustomAdapter(data, this:: deleteEvent)
+                val adapter = CustomAdapter(data, ::deleteEvent)
                 recyclerview.adapter = adapter
             }
             .addOnFailureListener { exception ->
                 Log.w(DOW, "Error getting documents: ", exception)
             }
 
-
-        setContentView(binding.root)
     }
 }
 
@@ -173,13 +156,6 @@ private fun fetchEvent(date:String)
                 .addOnSuccessListener {
                     // Document successfully deleted
                     Log.d(TAG, "DocumentSnapshot successfully deleted: $documentId")
-
-                    // Optionally, remove the item from your data list and notify the adapter
-                    val position = data.indexOfFirst { it.documentId == documentId }
-                    if (position != -1) {
-                        data.removeAt(position)
-                        recyclerview.adapter?.notifyItemRemoved(position)
-                    }
                 }
                 .addOnFailureListener { exception ->
                     Log.w(TAG, "Error deleting document $documentId", exception)
@@ -206,7 +182,7 @@ private fun fetchEvent(date:String)
 
         calendarView = findViewById(R.id.calendarView)
         dateTV = findViewById(R.id.selectedDateTextView)
-        dateTV.setText(Date1)
+        dateTV.text = Date1
         fetchEvent(Date1)
         calendarView.setOnDateChangeListener(
 
@@ -227,35 +203,15 @@ private fun fetchEvent(date:String)
 
         binding.addNoteButton.setOnClickListener {
             addNoteView()
-            val note = addNoteText()
-            val noteTime = addNoteTime()
             bindingPop.addNoteSubmit.setOnClickListener {
-
-                if (note != null) {
-                    createEvent(Date1,  note.toString(), noteTime.toString())
+                    createEvent(Date1)
                     setContentView(binding.root)
                     fetchEvent(Date1)
-                }
             }
             bindingPop.addNoteBack.setOnClickListener {
                 setContentView(binding.root)
             }
         }
-
-//        bindingCard.deleteButton.setOnClickListener{
-//
-//
-//
-//         data.removeAt(viewHolder.adapterPosition)
-//
-//        }
-
-//
-//        button.setOnClickListener{deleteItem(index)}
-
-
-//        val formattedDate = formatDate(currentDate.year, currentDate.month, currentDate.day)
-//        onDateSelected(formattedDate)
 
         firebaseAuth = FirebaseAuth.getInstance()
         binding.btnLogout.setOnClickListener{
