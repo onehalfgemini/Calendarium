@@ -14,12 +14,9 @@ import android.os.Build
 import android.text.Editable
 import androidx.recyclerview.widget.LinearLayoutManager
 import android.util.Log
-import android.widget.Button
 import androidx.annotation.RequiresApi
-import androidx.recyclerview.widget.RecyclerView
 import com.google.firebase.firestore.FirebaseFirestore
 import com.example.calendarium.databinding.ActivityPopUpBinding
-import com.example.calendarium.databinding.CardViewDesignBinding
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
@@ -39,8 +36,7 @@ class CalActivity : AppCompatActivity() {
     lateinit var dzien : String
     lateinit var miesiac:String
 
-    var templist: List<ItemViewModel> = emptyList()
-    var data: MutableList<ItemViewModel> = templist.toMutableList()
+
 
 
 
@@ -104,6 +100,10 @@ class CalActivity : AppCompatActivity() {
 
 private fun fetchEvent(date:String)
 {
+
+    var templist: List<ItemViewModel> = emptyList()
+    var data: MutableList<ItemViewModel> = templist.toMutableList()
+
     val userId = firebaseAuth.currentUser?.uid
     var recyclerview = binding.recyclerView
     //findViewById<RecyclerView>(R.id.recyclerview)
@@ -131,10 +131,13 @@ private fun fetchEvent(date:String)
                     }
 
                     data.add(ItemViewModel( document.id.split(",")[1],temporal,document.id ))
-                    Log.w("test1", note1[1].split("=")[1])
+                    Log.w("FetchLog", note1[1].split("=")[1])
+
+                    Log.d("data", data.toString()
+                    )
                 }
 
-                val adapter = CustomAdapter(data, ::deleteEvent)
+                val adapter = CustomAdapter(data, ::delEvent)
                 recyclerview.adapter = adapter
             }
             .addOnFailureListener { exception ->
@@ -144,7 +147,9 @@ private fun fetchEvent(date:String)
     }
 }
 
-    private fun deleteEvent(documentId: String) {
+
+
+    private fun delEvent(documentId: String) {
         val userId = firebaseAuth.currentUser?.uid
 
         if (userId != null) {
@@ -155,10 +160,10 @@ private fun fetchEvent(date:String)
                 .delete()
                 .addOnSuccessListener {
                     // Document successfully deleted
-                    Log.d(TAG, "DocumentSnapshot successfully deleted: $documentId")
+                    Log.d(DEL, "DocumentSnapshot successfully deleted: $documentId")
                 }
                 .addOnFailureListener { exception ->
-                    Log.w(TAG, "Error deleting document $documentId", exception)
+                    Log.w(DEL, "Error deleting document $documentId", exception)
                 }
         }
     }

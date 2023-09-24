@@ -41,11 +41,11 @@ class CustomAdapter(private val mList: MutableList<ItemViewModel>,
 
 
         holder.deleteButton.setOnClickListener{
-            mList.removeAt(position)
+
             val documentId = mList[position].documentId
+            mList.removeAt(position)
             Log.w("Test: ", documentId)
             deleteEvent(documentId)
-            notifyDataSetChanged()
         }
 
         // sets the image to the imageview from our itemHolder class
